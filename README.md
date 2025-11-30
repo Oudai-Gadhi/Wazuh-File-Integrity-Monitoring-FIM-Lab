@@ -1,168 +1,150 @@
-Cloud Security Monitoring Lab with Wazuh (AWS)
+# Wazuh File Integrity Monitoring (FIM) Lab
 
-This project demonstrates how to deploy Wazuh SIEM on AWS and simulate real security attacks against an EC2 instance.
-The goal is to show how Wazuh detects:
+This project demonstrates how to set up a **Wazuh Manager** and **Wazuh Agent** on two EC2 instances, configure File Integrity Monitoring, execute attacks, and observe events in the Wazuh Dashboard.
 
-SSH brute‑force attempts
+You can add your screenshots in the dedicated sections.
 
-Privilege escalation commands (sudo abuse)
+---
 
-File Integrity Monitoring (FIM) changes
+## 📌 1. Architecture
 
-Rootcheck anomalies (trojaned system binaries)
+* **Wazuh Manager** on EC2 (private subnet)
+* **Wazuh Agent** on EC2 (private subnet)
+* Communication via TCP/1514
+* Monitoring a custom directory on the agent: `/home/ubuntu/my_dir/`
 
-All detections are visible in the Wazuh Dashboard.
+---
 
-🚀 Architecture Overview
-Attacker Machine (Your PC)
-         │
-         ▼
-   EC2 Wazuh Agent  ───────►  Wazuh Manager EC2
-         │                       │
-   SSH / File / Sudo attacks     │
-         ▼                       ▼
-  Wazuh FIM / SCA / Rootcheck   Dashboard UI
+## 📌 2. Wazuh Manager Setup
 
+1. Installed Wazuh Manager via official repository.
+2. Verified service:
 
-📸 PLACE ARCHITECTURE DIAGRAM HERE
+   ```bash
+   sudo systemctl status wazuh-manager
+   ```
+3. Added the Agent key to the manager:
 
-🏗️ Environment Setup
-Wazuh Manager (EC2)
+   ```bash
+   sudo /var/ossec/bin/manage_agents
+   ```
+4. Checked manager logs:
 
-Ubuntu 22.04
+   ```bash
+   sudo tail -f /var/ossec/logs/ossec.log
+   ```
 
-Wazuh Manager + Dashboard installed
+---
 
-Security Group exposes:
+## 📌 3. Wazuh Agent Setup
 
-1514/TCP (agent logs)
+1. Installed Wazuh Agent on the second EC2.
+2. Registered the agent with the manager.
+3. Confirmed connection:
 
-55000/TCP (API communication)
+   ```bash
+   grep -i "connected" /var/ossec/logs/ossec.log
+   ```
+4. Output example:
 
-Wazuh Agent (EC2)
+   > Agent successfully connected to the server (10.0.1.32:1514/tcp)
 
-Installed and registered with the manager
+---
 
-Connection confirmed:
+## 📌 4. File Integrity Monitoring Configuration
 
-sudo grep -i "connected" /var/ossec/logs/ossec.log
+FIM was configured in:
 
-🔍 Configured File Integrity Monitoring (FIM)
+```
+/etc/ossec/etc/ossec.conf
+```
 
-Edited on the agent:
+### Added monitoring rule:
 
-<syscheck>
-  <disabled>no</disabled>
-  <frequency>600</frequency>
-  <scan_on_start>yes</scan_on_start>
+```xml
+<directory check_all="yes" realtime="yes">/home/ubuntu/my_dir</directory>
+```
 
-  <directories check_all="yes">/home/ubuntu/my_dir</directories>
-</syscheck>
+### Reloaded agent:
 
-
-Restart agent:
-
+```bash
 sudo systemctl restart wazuh-agent
+```
 
-🚨 Attack Simulations & Wazuh Detections
+### Verified FIM initialization:
 
-Below are the 3 main attacks executed, along with the alerts received.
+```bash
+grep "my_dir" /var/ossec/logs/ossec.log
+```
 
-🛑 Attack 1 — SSH Brute Force
-▶️ Command Used
+---
 
-(From your attacking machine)
-
-ssh ubuntu@<AGENT_PUBLIC_IP>
-# Repeat incorrect passwords
-
-
-📸 PLACE TERMINAL SCREENSHOT OF ATTACK HERE
-
-✔️ Expected Wazuh Alerts
-
-Multiple authentication failures
-
-Brute force correlation rule
-
-sshd: authentication failure
-sshd: possible brute force attack detected
-Rule: 5710 (level 5)
-Rule: 5502 (level 10)
+## 📌 5. Simulated Attacks 
+Executed SSH brute force attack :
+```bash
+hydra -l ubuntu -P wordlist.txt ssh://<IP>
+```
+Executed priv escalataion Method and created new user :
+```bash
+sudo su
+```
+```bash
+useradd oudai
+echo "hello" > /tmp/.hidden
+```
 
 
-📸 PLACE WAZUH DASHBOARD SSH ALERTS HERE
+Executed the following actions inside `/home/ubuntu/my_dir`:
 
-🔼 Attack 2 — Privilege Escalation
-▶️ Commands Used
-sudo su -
+### ✔️ Create file
 
+```bash
+echo "test content" > testfile.txt
+```
 
-or
+### ✔️ Modify file
 
-sudo /bin/bash
+```bash
+echo "new content" >> testfile.txt
+```
 
+### ✔️ Changing  file permissions
 
-📸 PLACE TERMINAL SCREENSHOT OF SUDO ATTACK HERE
+```bash
+chmod 600 testfile.txt
+```
 
-✔️ Expected Wazuh Alerts
-User ubuntu executed a command using sudo
-Rule: 5402 (level 8)
+---
 
+## 📌 6. Events in Wazuh Dashboard
 
-📸 PLACE PRIVILEGE ESCALATION ALERT SCREENSHOT HERE
+Wazuh Dashboard captured:
+* SSH brute force attack detection
+* Privelege escalation and persistence by user creation
+* File creation alerts
+* File modification alerts
+* File deletion alerts
+* Permissions/ownership changes 
 
-📁 Attack 3 — File Integrity Modification (FIM)
-
-The monitored directory was:
-
-/home/ubuntu/my_dir
-
-▶️ Commands Used
-
-Create or modify files:
-
-echo "test 123" > /home/ubuntu/my_dir/testfile.txt
-echo "changed again" >> /home/ubuntu/my_dir/testfile.txt
-
-
-📸 PLACE TERMINAL SCREENSHOT OF FILE CHANGES HERE
-
-✔️ Expected Wazuh Alerts
-File added: /home/ubuntu/my_dir/testfile.txt
-File modified: /home/ubuntu/my_dir/testfile.txt
-Rule: 550 (level 7)
+👉 **ALL needed screenshots are under /screenshots**
 
 
-📸 PLACE FIM ALERT SCREENSHOT HERE
+## 📌 7. Conclusion
 
-🪲 Bonus Detection — Rootcheck Anomalies
+This project demonstrates:
 
-Wazuh automatically flagged suspicious system binaries:
+* Deployment of Wazuh in a cloud environment
+* Successful agent‑manager communication
+* Real-time File Integrity Monitoring
+* Detection of attacks through Wazuh alerts
 
-Trojaned version of file '/bin/diff' detected
-Trojaned version of file '/usr/bin/diff' detected
-Rule: 510 (level 7)
+This forms the base for future security monitoring additions including:
 
+* CloudTrail
+* Sysmon
+* Log enrichment
+* Custom rules
 
-📸 PLACE ROOTCHECK ALERT SCREENSHOT HERE
+---
 
-📝 Summary of Detections
-Attack Category	Status	Description
-SSH Brute Force	✅ Detected	Multiple failed logins, brute force rule
-Privilege Escalation	✅ Detected	sudo elevation attempts logged
-File Integrity Monitoring	✅ Detected	File created/modified alerts
-Rootcheck	✅ Detected	Anomalous binaries flagged
-🎯 What This Project Demonstrates
-
-Deploying Wazuh SIEM in the cloud
-
-Installing & registering Wazuh agents
-
-Using FIM, Rootcheck, SCA, and SSH monitoring
-
-Simulating real cyberattacks
-
-Interpreting security alerts in a SIEM
-
-Building a defensive cloud environment
+Prepared by: **Oudai Gadhi**
