@@ -8,9 +8,10 @@ You can add your screenshots in the dedicated sections.
 
 ## 📌 1. Architecture
 
-* **Wazuh Manager** on EC2 (private subnet)
-* **Wazuh Agent** on EC2 (private subnet)
+* **Wazuh Manager** on EC2 
+* **Wazuh Agent** on EC2 
 * Communication via TCP/1514
+* Secured Security Groups
 * Monitoring a custom directory on the agent: `/home/ubuntu/my_dir/`
 
 ---
@@ -114,6 +115,10 @@ echo "new content" >> testfile.txt
 chmod 600 testfile.txt
 ```
 
+```bash
+rm testfile.txt
+```
+
 ---
 
 ## 📌 6. Events in Wazuh Dashboard
@@ -138,12 +143,7 @@ This project demonstrates:
 * Real-time File Integrity Monitoring
 * Detection of attacks through Wazuh alerts
 
-This forms the base for future security monitoring additions including:
-
-* CloudTrail
-* Sysmon
-* Log enrichment
-* Custom rules
+T
 
 ---
 
