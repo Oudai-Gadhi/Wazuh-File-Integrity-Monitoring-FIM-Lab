@@ -131,7 +131,7 @@ Wazuh Dashboard captured:
 * File deletion alerts
 * Permissions/ownership changes 
 
-👉 **ALL needed screenshots are in .jpg format**
+👉 **ALL needed screenshots are in .png format**
 
 
 ## 📌 7. Conclusion
