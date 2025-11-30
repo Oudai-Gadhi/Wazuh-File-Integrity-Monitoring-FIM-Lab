@@ -1,8 +1,8 @@
-# Wazuh File Integrity Monitoring (FIM) Lab
+# Wazuh Lab focusing on File_Integrity on the cloud
 
 This project demonstrates how to set up a **Wazuh Manager** and **Wazuh Agent** on two EC2 instances, configure File Integrity Monitoring, execute attacks, and observe events in the Wazuh Dashboard.
 
-You can add your screenshots in the dedicated sections.
+
 
 ---
 
@@ -131,7 +131,7 @@ Wazuh Dashboard captured:
 * File deletion alerts
 * Permissions/ownership changes 
 
-👉 **ALL needed screenshots are under /screenshots**
+👉 **ALL needed screenshots are in .jpg format**
 
 
 ## 📌 7. Conclusion
@@ -143,7 +143,7 @@ This project demonstrates:
 * Real-time File Integrity Monitoring
 * Detection of attacks through Wazuh alerts
 
-T
+
 
 ---
 
